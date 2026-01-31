@@ -5,8 +5,8 @@ participants:
     cl_type: lighthouse
     cl_image: lighthouse:local
     cl_extra_params:
-      - --target-peers=1
-    count: 2
+      - --target-peers=0
+    count: 1
 network_params:
   electra_fork_epoch: 0
   seconds_per_slot: 3

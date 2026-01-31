@@ -6,10 +6,10 @@ import { privateKeyToAccount } from 'viem/accounts';
 import { foundry } from 'viem/chains';
 
 async function main() {
-    const RPC_URL = process.env.RPC_URL || 'http://127.0.0.1:8545';
+    const RPC_URL = process.env.RPC_URL || 'http://127.0.0.1:55835';
     const ROOT_PRIVATE_KEY =
         process.env.PRIVATE_KEY ||
-        '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'; // Anvil default #0
+        '0xbcdf20249abf0ed6d944c0288fad489e33f66b3960d9e6229c1cd214ed3bbe31';
 
     const chain = { ...foundry, rpcUrls: { default: { http: [RPC_URL] } } };
     const publicClient = createPublicClient({ chain, transport: http(RPC_URL) });
@@ -29,6 +29,9 @@ async function main() {
     const receipt = await publicClient.waitForTransactionReceipt({ hash: deployHash });
     const spammerAddress = receipt.contractAddress!;
     console.log('Spammer deployed at:', spammerAddress);
+
+    // wait extra 12 seconds just to be sure block prod has progressed
+    await new Promise(resolve => setTimeout(resolve, 12000));
 
     const mixedConfig: SpamSequenceConfig = {
         rpcUrl: RPC_URL,
