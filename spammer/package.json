@@ -6,7 +6,16 @@
   "scripts": {
     "start": "tsx index.ts",
     "tunner": "tsx tunner.ts",
-    "p": "prettier --write \"**/*.{ts,json}\""
+    "p": "prettier --write \"**/*.{ts,json}\"",
+    "c1:b0:100": "tsx case_one/block0_100mb.ts",
+    "c1:b0:300": "tsx case_one/block0_300mb.ts",
+    "c1:b0:500": "tsx case_one/block0_500mb.ts",
+    "c1:b8:300": "tsx case_one/block8_300mb.ts",
+    "c1:b32:300": "tsx case_one/block32_300mb.ts",
+    "c1:b64:300": "tsx case_one/block64_300mb.ts",
+    "c2:100": "tsx case_two/100mb.ts",
+    "c2:300": "tsx case_two/300mb.ts",
+    "c2:500": "tsx case_two/500mb.ts"
   },
   "keywords": [],
   "author": "",
