@@ -125,6 +125,7 @@ pub struct PayloadStatusV1 {
     pub status: PayloadStatusV1Status,
     pub latest_valid_hash: Option<ExecutionBlockHash>,
     pub validation_error: Option<String>,
+    pub witness: Option<serde_json::Value>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize)]

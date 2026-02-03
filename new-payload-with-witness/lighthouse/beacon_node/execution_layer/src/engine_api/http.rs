@@ -823,6 +823,14 @@ impl HttpJsonRpc {
             .await?;
         info!("new_payload_v3 took {:?}", start.elapsed());
 
+        if let Some(witness) = &response.witness {
+            let size = match witness {
+                serde_json::Value::String(s) => s.len().saturating_sub(2) / 2,
+                _ => 0,
+            };
+            info!("Received witness size: {} bytes", size);
+        }
+
         Ok(response.into())
     }
 
@@ -851,6 +859,14 @@ impl HttpJsonRpc {
             .await?;
         info!("new_payload_v4_electra took {:?}", start.elapsed());
 
+        if let Some(witness) = &response.witness {
+            let size = match witness {
+                serde_json::Value::String(s) => s.len().saturating_sub(2) / 2,
+                _ => 0,
+            };
+            info!("Received witness size: {} bytes", size);
+        }
+
         Ok(response.into())
     }
 
@@ -877,6 +893,14 @@ impl HttpJsonRpc {
             .await?;
         info!("new_payload_v4_fulu took {:?}", start.elapsed());
 
+        if let Some(witness) = &response.witness {
+            let size = match witness {
+                serde_json::Value::String(s) => s.len().saturating_sub(2) / 2,
+                _ => 0,
+            };
+            info!("Received witness size: {} bytes", size);
+        }
+
         Ok(response.into())
     }
 
@@ -902,6 +926,14 @@ impl HttpJsonRpc {
             )
             .await?;
         info!("new_payload_v4_gloas took {:?}", start.elapsed());
+
+        if let Some(witness) = &response.witness {
+            let size = match witness {
+                serde_json::Value::String(s) => s.len().saturating_sub(2) / 2,
+                _ => 0,
+            };
+            info!("Received witness size: {} bytes", size);
+        }
 
         Ok(response.into())
     }

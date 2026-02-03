@@ -873,6 +873,8 @@ pub struct JsonPayloadStatusV1 {
     pub status: JsonPayloadStatusV1Status,
     pub latest_valid_hash: Option<ExecutionBlockHash>,
     pub validation_error: Option<String>,
+    #[serde(default)]
+    pub witness: Option<serde_json::Value>,
 }
 
 impl From<PayloadStatusV1Status> for JsonPayloadStatusV1Status {
@@ -905,12 +907,14 @@ impl From<PayloadStatusV1> for JsonPayloadStatusV1 {
             status,
             latest_valid_hash,
             validation_error,
+            witness,
         } = p;
 
         Self {
             status: status.into(),
             latest_valid_hash,
             validation_error,
+            witness,
         }
     }
 }
@@ -922,12 +926,14 @@ impl From<JsonPayloadStatusV1> for PayloadStatusV1 {
             status,
             latest_valid_hash,
             validation_error,
+            witness,
         } = j;
 
         Self {
             status: status.into(),
             latest_valid_hash,
             validation_error,
+            witness,
         }
     }
 }

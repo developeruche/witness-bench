@@ -669,7 +669,7 @@ func (api *ConsensusAPI) NewPayloadV3(params engine.ExecutableData, versionedHas
 	case !api.checkFork(params.Timestamp, forks.Cancun):
 		return invalidStatus, unsupportedForkErr("newPayloadV3 must only be called for cancun payloads")
 	}
-	return api.newPayload(params, versionedHashes, beaconRoot, nil, false)
+	return api.newPayload(params, versionedHashes, beaconRoot, nil, true)
 }
 
 // NewPayloadV4 creates an Eth1 block, inserts it in the chain, and returns the status of the chain.
@@ -694,7 +694,7 @@ func (api *ConsensusAPI) NewPayloadV4(params engine.ExecutableData, versionedHas
 	if err := validateRequests(requests); err != nil {
 		return engine.PayloadStatusV1{Status: engine.INVALID}, engine.InvalidParams.With(err)
 	}
-	return api.newPayload(params, versionedHashes, beaconRoot, requests, false)
+	return api.newPayload(params, versionedHashes, beaconRoot, requests, true)
 }
 
 func (api *ConsensusAPI) newPayload(params engine.ExecutableData, versionedHashes []common.Hash, beaconRoot *common.Hash, requests [][]byte, witness bool) (engine.PayloadStatusV1, error) {
@@ -750,12 +750,13 @@ func (api *ConsensusAPI) newPayload(params engine.ExecutableData, versionedHashe
 	// Stash away the last update to warn the user if the beacon client goes offline
 	api.lastNewPayloadUpdate.Store(time.Now().Unix())
 
+	var witnessBytes *hexutil.Bytes
 	// If we already have the block locally, ignore the entire execution and just
 	// return a fake success.
 	if block := api.eth.BlockChain().GetBlockByHash(params.BlockHash); block != nil {
 		log.Warn("Ignoring already known beacon payload", "number", params.Number, "hash", params.BlockHash, "age", common.PrettyAge(time.Unix(int64(block.Time()), 0)))
 		hash := block.Hash()
-		return engine.PayloadStatusV1{Status: engine.VALID, LatestValidHash: &hash}, nil
+		return engine.PayloadStatusV1{Status: engine.VALID, LatestValidHash: &hash, Witness: witnessBytes}, nil
 	}
 	// If this block was rejected previously, keep rejecting it
 	if res := api.checkInvalidAncestor(block.Hash(), block.Hash()); res != nil {
@@ -800,6 +801,15 @@ func (api *ConsensusAPI) newPayload(params engine.ExecutableData, versionedHashe
 		api.invalidLock.Unlock()
 
 		return api.invalid(err, parent.Header()), nil
+	}
+	if witness && proofs != nil {
+		encoded, err := rlp.EncodeToBytes(proofs)
+		if err != nil {
+			log.Warn("Failed to serialize witness", "err", err)
+		} else {
+			wb := hexutil.Bytes(encoded)
+			witnessBytes = &wb
+		}
 	}
 	hash := block.Hash()
 
