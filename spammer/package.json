@@ -1,22 +1,24 @@
 {
-    "name": "spammer-project",
-    "version": "1.0.0",
-    "description": "Spammer project using @developeruche/tx-spammer-sdk",
-    "main": "index.ts",
-    "scripts": {
-        "start": "tsx index.ts",
-        "tunner": "tsx tunner.ts"
-    },
-    "keywords": [],
-    "author": "",
-    "license": "ISC",
-    "dependencies": {
-        "@developeruche/tx-spammer-sdk": "^1.0.4",
-        "viem": "^2.21.0"
-    },
-    "devDependencies": {
-        "tsx": "^4.7.1",
-        "typescript": "^5.3.3",
-        "@types/node": "^20.11.24"
-    }
+  "name": "spammer-project",
+  "version": "1.0.0",
+  "description": "Spammer project using @developeruche/tx-spammer-sdk",
+  "main": "index.ts",
+  "scripts": {
+    "start": "tsx index.ts",
+    "tunner": "tsx tunner.ts",
+    "p": "prettier --write \"**/*.{ts,json}\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@developeruche/tx-spammer-sdk": "^1.0.4",
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "prettier": "^3.8.1",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3"
+  }
 }
