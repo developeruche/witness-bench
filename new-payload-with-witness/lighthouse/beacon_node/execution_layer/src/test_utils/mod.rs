@@ -285,6 +285,7 @@ impl<E: EthSpec> MockServer<E> {
 
     fn valid_status() -> PayloadStatusV1 {
         PayloadStatusV1 {
+            witness: None,
             status: PayloadStatusV1Status::Valid,
             latest_valid_hash: None,
             validation_error: None,
@@ -300,6 +301,7 @@ impl<E: EthSpec> MockServer<E> {
 
     fn syncing_status() -> PayloadStatusV1 {
         PayloadStatusV1 {
+            witness: None,
             status: PayloadStatusV1Status::Syncing,
             latest_valid_hash: None,
             validation_error: None,
@@ -315,6 +317,7 @@ impl<E: EthSpec> MockServer<E> {
 
     fn invalid_status(latest_valid_hash: ExecutionBlockHash) -> PayloadStatusV1 {
         PayloadStatusV1 {
+            witness: None,
             status: PayloadStatusV1Status::Invalid,
             latest_valid_hash: Some(latest_valid_hash),
             validation_error: Some("static response".into()),
@@ -332,6 +335,7 @@ impl<E: EthSpec> MockServer<E> {
 
     fn invalid_block_hash_status() -> PayloadStatusV1 {
         PayloadStatusV1 {
+            witness: None,
             status: PayloadStatusV1Status::InvalidBlockHash,
             latest_valid_hash: None,
             validation_error: Some("static response".into()),
@@ -347,6 +351,7 @@ impl<E: EthSpec> MockServer<E> {
 
     fn invalid_terminal_block_status() -> PayloadStatusV1 {
         PayloadStatusV1 {
+            witness: None,
             status: PayloadStatusV1Status::Invalid,
             latest_valid_hash: Some(ExecutionBlockHash::zero()),
             validation_error: Some("static response".into()),

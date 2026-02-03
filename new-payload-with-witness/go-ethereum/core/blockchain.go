@@ -2137,10 +2137,12 @@ func (bc *BlockChain) ProcessBlock(parentRoot common.Hash, block *types.Block, s
 		// only block being inserted. A bit crude, but witnesses are huge,
 		// so we refuse to make an entire chain of them.
 		if bc.cfg.VmConfig.StatelessSelfValidation || makeWitness {
+			wGenStart := time.Now()
 			witness, err = stateless.NewWitness(block.Header(), bc)
 			if err != nil {
 				return nil, err
 			}
+			log.Info("[WITNESS_BENCH] Witness Setup Time", "duration", time.Since(wGenStart))
 			if bc.cfg.VmConfig.EnableWitnessStats {
 				witnessStats = stateless.NewWitnessStats()
 			}
@@ -2170,6 +2172,7 @@ func (bc *BlockChain) ProcessBlock(parentRoot common.Hash, block *types.Block, s
 		return nil, err
 	}
 	ptime := time.Since(pstart)
+	log.Info("[WITNESS_BENCH] Block Execution Time", "duration", ptime)
 
 	vstart := time.Now()
 	if err := bc.validator.ValidateState(block, statedb, res, false); err != nil {

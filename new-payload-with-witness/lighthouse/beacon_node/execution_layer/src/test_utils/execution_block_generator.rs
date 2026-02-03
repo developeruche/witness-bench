@@ -513,6 +513,7 @@ impl<E: EthSpec> ExecutionBlockGenerator<E> {
     pub fn new_payload(&mut self, payload: ExecutionPayload<E>) -> PayloadStatusV1 {
         let Some(parent) = self.blocks.get(&payload.parent_hash()) else {
             return PayloadStatusV1 {
+                witness: None,
                 status: PayloadStatusV1Status::Syncing,
                 latest_valid_hash: None,
                 validation_error: None,
@@ -521,6 +522,7 @@ impl<E: EthSpec> ExecutionBlockGenerator<E> {
 
         if payload.block_number() != parent.block_number() + 1 {
             return PayloadStatusV1 {
+                witness: None,
                 status: PayloadStatusV1Status::Invalid,
                 latest_valid_hash: Some(parent.block_hash()),
                 validation_error: Some("invalid block number".to_string()),
@@ -531,6 +533,7 @@ impl<E: EthSpec> ExecutionBlockGenerator<E> {
         self.pending_payloads.insert(payload.block_hash(), payload);
 
         PayloadStatusV1 {
+            witness: None,
             status: PayloadStatusV1Status::Valid,
             latest_valid_hash: Some(valid_hash),
             validation_error: None,
@@ -570,6 +573,7 @@ impl<E: EthSpec> ExecutionBlockGenerator<E> {
         if unknown_head_block_hash || unknown_safe_block_hash || unknown_finalized_block_hash {
             return Ok(JsonForkchoiceUpdatedV1Response {
                 payload_status: JsonPayloadStatusV1 {
+                    witness: None,
                     status: JsonPayloadStatusV1Status::Syncing,
                     latest_valid_hash: None,
                     validation_error: None,
@@ -612,6 +616,7 @@ impl<E: EthSpec> ExecutionBlockGenerator<E> {
 
         Ok(JsonForkchoiceUpdatedV1Response {
             payload_status: JsonPayloadStatusV1 {
+                witness: None,
                 status: JsonPayloadStatusV1Status::Valid,
                 latest_valid_hash: Some(forkchoice_state.head_block_hash),
                 validation_error: None,

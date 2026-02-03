@@ -821,14 +821,14 @@ impl HttpJsonRpc {
                 ENGINE_NEW_PAYLOAD_TIMEOUT * self.execution_timeout_multiplier,
             )
             .await?;
-        info!("new_payload_v3 took {:?}", start.elapsed());
+        info!("[WITNESS_BENCH] CL Round-Trip Latency: {:?}", start.elapsed());
 
         if let Some(witness) = &response.witness {
             let size = match witness {
                 serde_json::Value::String(s) => s.len().saturating_sub(2) / 2,
                 _ => 0,
             };
-            info!("Received witness size: {} bytes", size);
+            info!("[WITNESS_BENCH] CL Received Witness Size: {} bytes", size);
         }
 
         Ok(response.into())
@@ -857,14 +857,14 @@ impl HttpJsonRpc {
                 ENGINE_NEW_PAYLOAD_TIMEOUT * self.execution_timeout_multiplier,
             )
             .await?;
-        info!("new_payload_v4_electra took {:?}", start.elapsed());
+        info!("[WITNESS_BENCH] CL Round-Trip Latency: {:?}", start.elapsed());
 
         if let Some(witness) = &response.witness {
             let size = match witness {
                 serde_json::Value::String(s) => s.len().saturating_sub(2) / 2,
                 _ => 0,
             };
-            info!("Received witness size: {} bytes", size);
+            info!("[WITNESS_BENCH] CL Received Witness Size: {} bytes", size);
         }
 
         Ok(response.into())
@@ -891,14 +891,14 @@ impl HttpJsonRpc {
                 ENGINE_NEW_PAYLOAD_TIMEOUT * self.execution_timeout_multiplier,
             )
             .await?;
-        info!("new_payload_v4_fulu took {:?}", start.elapsed());
+        info!("[WITNESS_BENCH] CL Round-Trip Latency: {:?}", start.elapsed());
 
         if let Some(witness) = &response.witness {
             let size = match witness {
                 serde_json::Value::String(s) => s.len().saturating_sub(2) / 2,
                 _ => 0,
             };
-            info!("Received witness size: {} bytes", size);
+            info!("[WITNESS_BENCH] CL Received Witness Size: {} bytes", size);
         }
 
         Ok(response.into())
@@ -925,14 +925,14 @@ impl HttpJsonRpc {
                 ENGINE_NEW_PAYLOAD_TIMEOUT * self.execution_timeout_multiplier,
             )
             .await?;
-        info!("new_payload_v4_gloas took {:?}", start.elapsed());
+        info!("[WITNESS_BENCH] CL Round-Trip Latency: {:?}", start.elapsed());
 
         if let Some(witness) = &response.witness {
             let size = match witness {
                 serde_json::Value::String(s) => s.len().saturating_sub(2) / 2,
                 _ => 0,
             };
-            info!("Received witness size: {} bytes", size);
+            info!("[WITNESS_BENCH] CL Received Witness Size: {} bytes", size);
         }
 
         Ok(response.into())

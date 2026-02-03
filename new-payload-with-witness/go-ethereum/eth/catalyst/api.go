@@ -788,10 +788,12 @@ func (api *ConsensusAPI) newPayload(params engine.ExecutableData, versionedHashe
 		log.Warn("State not available, ignoring new payload")
 		return engine.PayloadStatusV1{Status: engine.ACCEPTED}, nil
 	}
-	log.Trace("Inserting block without sethead", "hash", block.Hash(), "number", block.Number())
+	// log.Trace("Inserting block without sethead", "hash", block.Hash(), "number", block.Number())
 	start := time.Now()
 	proofs, err := api.eth.BlockChain().InsertBlockWithoutSetHead(block, witness)
 	processingTime := time.Since(start)
+	log.Info("[WITNESS_BENCH] Total Execution+Witness Time", "duration", processingTime)
+
 	if err != nil {
 		log.Warn("NewPayload: inserting block failed", "error", err)
 
@@ -803,10 +805,14 @@ func (api *ConsensusAPI) newPayload(params engine.ExecutableData, versionedHashe
 		return api.invalid(err, parent.Header()), nil
 	}
 	if witness && proofs != nil {
+		serStart := time.Now()
 		encoded, err := rlp.EncodeToBytes(proofs)
+		serDuration := time.Since(serStart)
 		if err != nil {
 			log.Warn("Failed to serialize witness", "err", err)
 		} else {
+			log.Info("[WITNESS_BENCH] Approx Serialization Time", "duration", serDuration)
+			log.Info("[WITNESS_BENCH] Witness Size", "bytes", len(encoded))
 			wb := hexutil.Bytes(encoded)
 			witnessBytes = &wb
 		}
