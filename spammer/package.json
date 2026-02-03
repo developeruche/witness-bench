@@ -4,13 +4,14 @@
     "description": "Spammer project using @developeruche/tx-spammer-sdk",
     "main": "index.ts",
     "scripts": {
-        "start": "tsx index.ts"
+        "start": "tsx index.ts",
+        "tunner": "tsx tunner.ts"
     },
     "keywords": [],
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "@developeruche/tx-spammer-sdk": "^1.0.0",
+        "@developeruche/tx-spammer-sdk": "^1.0.4",
         "viem": "^2.21.0"
     },
     "devDependencies": {

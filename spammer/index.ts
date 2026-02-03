@@ -31,11 +31,12 @@ async function main() {
     console.log('Spammer deployed at:', spammerAddress);
 
     // wait extra 12 seconds just to be sure block prod has progressed
+    console.log('Waiting for 12 seconds...');
     await new Promise(resolve => setTimeout(resolve, 12000));
 
     const mixedConfig: SpamSequenceConfig = {
         rpcUrl: RPC_URL,
-        chainId: 31337,
+        chainId: 31337, // I think I should be changing this to 1
         maxGasLimit: 30_000_000n,
         concurrency: 50,
         durationSeconds: 10,

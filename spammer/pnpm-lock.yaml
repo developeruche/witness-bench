@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@developeruche/tx-spammer-sdk':
-        specifier: ^1.0.0
-        version: 1.0.0(typescript@5.9.3)
+        specifier: ^1.0.4
+        version: 1.0.4(typescript@5.9.3)
       viem:
         specifier: ^2.21.0
         version: 2.45.1(typescript@5.9.3)(zod@4.3.6)
@@ -30,8 +30,8 @@ packages:
   '@adraffy/ens-normalize@1.11.1':
     resolution: {integrity: sha512-nhCBV3quEgesuf7c7KYfperqSS14T8bYuvJ8PcLJp6znkZpFc0AuW4qBtr8eKVyPPe/8RSr7sglCWPU5eaxwKQ==}
 
-  '@developeruche/tx-spammer-sdk@1.0.0':
-    resolution: {integrity: sha512-FwmGOhtKMCO2OkUxBhJZVe01c+rGDq3dVtvNk34EqNVFQNt6MmrgDZR7eBqnagcX1ngonQVvBHuziSN6+WDGEw==}
+  '@developeruche/tx-spammer-sdk@1.0.4':
+    resolution: {integrity: sha512-aVC0ukKgjFHrj1dsUw3fIEtvi+JNzk9sYlkVefqFrDvoHi79d/HcfPDlzAtHs+U1hcTAbUZZRgwQ0/EFVLW1Kw==}
 
   '@esbuild/aix-ppc64@0.27.2':
     resolution: {integrity: sha512-GZMB+a0mOMZs4MpDbj8RJp4cw+w1WV5NYD6xzgvzUJ5Ek2jerwfO2eADyI6ExDSUED+1X8aMbegahsJi+8mgpw==}
@@ -296,7 +296,7 @@ snapshots:
 
   '@adraffy/ens-normalize@1.11.1': {}
 
-  '@developeruche/tx-spammer-sdk@1.0.0(typescript@5.9.3)':
+  '@developeruche/tx-spammer-sdk@1.0.4(typescript@5.9.3)':
     dependencies:
       viem: 2.45.1(typescript@5.9.3)(zod@4.3.6)
       zod: 4.3.6
