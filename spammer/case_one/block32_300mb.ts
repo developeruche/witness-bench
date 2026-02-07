@@ -1,5 +1,5 @@
 import { createPublicClient, http } from "viem";
-import { run_with_strategy, setup_300mb } from "../runners";
+import { run_with_strategy, setup_100mb, setup_300mb, waitForNextBlock } from "../runners";
 import { localTestnet, RPC_URL } from "../constants";
 
 // For this case, we would like to find out how long it would that to process `engine_newPayload`
@@ -24,7 +24,9 @@ async function run() {
   // receive the response. NOTE: for accurate results, this logs is been done on the CL clent.
 
   for (let i = 0; i < 32; i++) {
-    await run_with_strategy(strategy_300mb)!; // this is a mechanism for waiting for the next block this is function already
+    let strategy_100mb = await setup_100mb();
+    await run_with_strategy(strategy_100mb)!;
+    console.log(`Spammed delta-block ${i + 1}`);
   }
 
   console.log("Fetching execution witness...");

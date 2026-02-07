@@ -48,7 +48,7 @@ export async function run_with_strategy(
   }
 }
 
-async function waitForNextBlock(client: any) {
+export async function waitForNextBlock(client: any) {
   return new Promise<void>((resolve) => {
     const unwatch = client.watchBlockNumber({
       onBlockNumber: () => {

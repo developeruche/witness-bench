@@ -10,18 +10,15 @@ import {
 } from "viem";
 import { SPAMMER_ABI, SPAMMER_BYTECODE } from "./SpammerArtifact";
 import { privateKeyToAccount } from "viem/accounts";
+import {
+  BATCH_TOUCHER_ARTIFACT_PATH,
+  CHAIN_ID,
+  OUTPUT_FILE,
+  ROOT_PRIVATE_KEY,
+  RPC_URL,
+} from "./constants";
 
 async function main() {
-  const RPC_URL = process.env.RPC_URL || "http://127.0.0.1:55643";
-  const ROOT_PRIVATE_KEY =
-    process.env.PRIVATE_KEY ||
-    "0x39725efee3fb28614de3bacaffe4cc4bd8c436257e2c8bb887c4b5c4be45e76d";
-
-  // const RPC_URL = process.env.RPC_URL || 'http://127.0.0.1:8545';
-  // const ROOT_PRIVATE_KEY =
-  //     process.env.PRIVATE_KEY ||
-  //     '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
-
   let localTestnet = defineChain({
     id: 3151908,
     name: "Local Testnet",
@@ -44,59 +41,33 @@ async function main() {
     transport: http(RPC_URL),
   });
 
-  console.log("\n--- 0. Setup: Deploying Spammer.sol Target ---");
-  const deployHash = await rootClient.deployContract({
-    abi: SPAMMER_ABI,
-    bytecode: SPAMMER_BYTECODE,
+  const artifact = JSON.parse(
+    fs.readFileSync(BATCH_TOUCHER_ARTIFACT_PATH, "utf-8"),
+  );
+  const hash = await rootClient.deployContract({
+    abi: artifact.abi,
+    bytecode: artifact.bytecode.object,
   });
-  console.log("Deploy tx sent:", deployHash);
-  const receipt = await publicClient.waitForTransactionReceipt({
-    hash: deployHash,
-  });
-  const spammerAddress = receipt.contractAddress!;
-  console.log("Spammer deployed at:", spammerAddress);
+  const receipt = await publicClient.waitForTransactionReceipt({ hash });
+  let toucherAddress = receipt.contractAddress!;
 
-  const mixedConfig: SpamSequenceConfig = {
+  // 100mb = 8_000_000n, 300mb = 24_000_000n, 500mb = 38_000_000n
+  const touchConfig: SpamSequenceConfig = {
     rpcUrl: RPC_URL,
-    chainId: 3151908, // I think I should be changing this to 1
-    maxGasLimit: 60_000_000n,
-    concurrency: 1,
-    durationSeconds: 300,
+    chainId: 31337,
+    maxGasLimit: 38_000_000n,
+    concurrency: 2,
+    durationSeconds: 1000,
     strategy: {
-      mode: "mixed",
-      strategies: [
-        // {
-        //     percentage: 100,
-        //     config: {
-        //         mode: 'transfer',
-        //         amountPerTx: parseEther('0.0001'),
-        //         depth: 1,
-        //     },
-        // },
-        {
-          percentage: 100,
-          config: {
-            mode: "write",
-            targetContract: spammerAddress,
-            functionName: "spam",
-            abi: SPAMMER_ABI as any,
-            staticArgs: [],
-          },
-        },
-        // {
-        //     percentage: 50,
-        //     config: {
-        //         mode: 'deploy',
-        //         bytecode: SPAMMER_BYTECODE,
-        //         args: [],
-        //     },
-        // }
-      ],
+      mode: "batch_toucher",
+      inputFile: OUTPUT_FILE,
+      batchSize: 50,
+      toucherAddress: toucherAddress,
     },
   };
 
   const orchestrator = new SpamOrchestrator(
-    mixedConfig,
+    touchConfig,
     ROOT_PRIVATE_KEY as `0x${string}`,
   );
 
@@ -130,6 +101,19 @@ async function main() {
   } catch (error) {
     console.error("Spam failed:", error);
   }
+
+  // let blockNumber = 188n;
+  // console.log("Fetching execution witness...");
+  // const witness = await publicClient.request({
+  //   method: "debug_executionWitness" as any,
+  //   // @ts-ignore
+  //   params: [`0x${blockNumber.toString(16)}`],
+  // });
+
+  // const witnessSize = JSON.stringify(witness).length;
+  // // write witness to file
+  // fs.writeFileSync("witness.json", JSON.stringify(witness));
+  // console.log(`Witness size: ${(witnessSize / 1024 / 1024).toFixed(2)} MB`);
 }
 
 async function waitForNextBlock(client: any) {

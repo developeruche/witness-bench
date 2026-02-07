@@ -1,0 +1,91 @@
+{
+  "abi": [
+    {
+      "type": "function",
+      "name": "touchBatch",
+      "inputs": [
+        {
+          "name": "targets",
+          "type": "address[]",
+          "internalType": "address[]"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    }
+  ],
+  "bytecode": {
+    "object": "0x6080806040523460155761014c908161001a8239f35b5f80fdfe60806040526004361015610011575f80fd5b5f3560e01c637645c22414610024575f80fd5b34610110576020366003190112610110576004356001600160401b0381116101105736602382011215610110576004810135906001600160401b038211610110573660248360051b83010111610110575f5b8281101561011457600581901b8201602401356001600160a01b0381168103610110575f80808080945af1503d15610108573d906001600160401b0382116100f457604051601f8301601f19908116603f01168101926001600160401b038411828510176100f45760019360405281525f60203d92013e5b01610076565b634e487b7160e01b5f52604160045260245ffd5b6001906100ee565b5f80fd5b00fea2646970667358221220602109de6ee4df1c7ed57b849a11c39a8ed20fad582fd6cc472acc19c1e5888e64736f6c634300081e0033",
+    "sourceMap": "66:578:19:-:0;;;;;;;;;;;;;;;;;",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x60806040526004361015610011575f80fd5b5f3560e01c637645c22414610024575f80fd5b34610110576020366003190112610110576004356001600160401b0381116101105736602382011215610110576004810135906001600160401b038211610110573660248360051b83010111610110575f5b8281101561011457600581901b8201602401356001600160a01b0381168103610110575f80808080945af1503d15610108573d906001600160401b0382116100f457604051601f8301601f19908116603f01168101926001600160401b038411828510176100f45760019360405281525f60203d92013e5b01610076565b634e487b7160e01b5f52604160045260245ffd5b6001906100ee565b5f80fd5b00fea2646970667358221220602109de6ee4df1c7ed57b849a11c39a8ed20fad582fd6cc472acc19c1e5888e64736f6c634300081e0033",
+    "sourceMap": "66:578:19:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;66:578:19;;;;;;-1:-1:-1;;;;;66:578:19;;;;;;;;;;;;;;;;;-1:-1:-1;;;;;66:578:19;;;;;;;;;;;;;;;;355:3;335:18;;;;;;66:578;;;;;;;;;-1:-1:-1;;;;;66:578:19;;;;;;;605:19;;;;;;;-1:-1:-1;66:578:19;;;;;;-1:-1:-1;;;;;66:578:19;;;;;;;;;-1:-1:-1;;66:578:19;;;;;;;;;-1:-1:-1;;;;;66:578:19;;;;;;;;;;;;;;;;;;;;;;320:13;;66:578;;;;;;;;;;;;;;;;;;;;;335:18;66:578",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {
+    "touchBatch(address[])": "7645c224"
+  },
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.30+commit.73712a01\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"targets\",\"type\":\"address[]\"}],\"name\":\"touchBatch\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/BatchToucher.sol\":\"BatchToucher\"},\"evmVersion\":\"prague\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":1},\"remappings\":[\":forge-std/=lib/forge-std/src/\"],\"viaIR\":true},\"sources\":{\"src/BatchToucher.sol\":{\"keccak256\":\"0x2c74d771819245df9a150ce5cfe5ff98314a6db690f7effe5c2208b28c9f5193\",\"license\":\"UNLICENSED\",\"urls\":[\"bzz-raw://9b741c1e4ab9c684725e30c73ecc53c902635ff8d6aafe2c39292bffa43306de\",\"dweb:/ipfs/QmW3dkPT57tsGppMpb2WqjTnWqKAENGBL8sC7SwrB4KqzF\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": {
+      "version": "0.8.30+commit.73712a01"
+    },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "address[]",
+              "name": "targets",
+              "type": "address[]"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "touchBatch"
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {},
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {},
+        "version": 1
+      }
+    },
+    "settings": {
+      "remappings": ["forge-std/=lib/forge-std/src/"],
+      "optimizer": {
+        "enabled": true,
+        "runs": 1
+      },
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "compilationTarget": {
+        "src/BatchToucher.sol": "BatchToucher"
+      },
+      "evmVersion": "prague",
+      "libraries": {},
+      "viaIR": true
+    },
+    "sources": {
+      "src/BatchToucher.sol": {
+        "keccak256": "0x2c74d771819245df9a150ce5cfe5ff98314a6db690f7effe5c2208b28c9f5193",
+        "urls": [
+          "bzz-raw://9b741c1e4ab9c684725e30c73ecc53c902635ff8d6aafe2c39292bffa43306de",
+          "dweb:/ipfs/QmW3dkPT57tsGppMpb2WqjTnWqKAENGBL8sC7SwrB4KqzF"
+        ],
+        "license": "UNLICENSED"
+      }
+    },
+    "version": 1
+  },
+  "id": 19
+}

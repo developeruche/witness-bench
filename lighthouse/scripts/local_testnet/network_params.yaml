@@ -6,10 +6,14 @@ participants:
     cl_image: lighthouse:local
     cl_extra_params:
       - --target-peers=0
+    el_extra_params:
+      - "--miner.gaslimit=720000000000"
     count: 1
 network_params:
   electra_fork_epoch: 0
   seconds_per_slot: 12
+  additional_preloaded_contracts: '{"0x123463a4B065722E99115D6c222f267d9cABb524": {"balance": "2ETH","code": "0x1234","storage": {}}}'
+  genesis_gaslimit: 720000000000
 global_log_level: debug
 snooper_enabled: false
 additional_services:

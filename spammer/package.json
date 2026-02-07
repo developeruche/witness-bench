@@ -5,7 +5,9 @@
   "main": "index.ts",
   "scripts": {
     "start": "tsx index.ts",
-    "tunner": "tsx tunner.ts",
+    "tunner": "tsx --max-old-space-size=8192 tunner.ts",
+    "b:setup": "tsx setup.ts",
+    "gen": "tsx gen.ts",
     "p": "prettier --write \"**/*.{ts,json}\"",
     "c1:b0:100": "tsx case_one/block0_100mb.ts",
     "c1:b0:300": "tsx case_one/block0_300mb.ts",
@@ -21,7 +23,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@developeruche/tx-spammer-sdk": "^1.0.4",
+    "@developeruche/tx-spammer-sdk": "^1.0.8",
     "viem": "^2.21.0"
   },
   "devDependencies": {

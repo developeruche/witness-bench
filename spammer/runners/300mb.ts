@@ -1,7 +1,9 @@
 import { SpamSequenceConfig } from "@developeruche/tx-spammer-sdk/dist/types";
 import {
+  BATCH_TOUCHER_ARTIFACT_PATH,
   CHAIN_ID,
   localTestnet,
+  OUTPUT_FILE,
   ROOT_PRIVATE_KEY,
   RPC_URL,
 } from "../constants";
@@ -18,6 +20,7 @@ import {
 } from "viem";
 import { SPAMMER_ABI, SPAMMER_BYTECODE } from "../SpammerArtifact";
 import { privateKeyToAccount } from "viem/accounts";
+import * as fs from "fs";
 
 export async function setup_300mb(): Promise<SpamSequenceConfig> {
   const rootAccount = privateKeyToAccount(ROOT_PRIVATE_KEY as `0x${string}`);
@@ -34,54 +37,28 @@ export async function setup_300mb(): Promise<SpamSequenceConfig> {
   console.log("========================================");
   console.log("------    Setting up 300mb spam strategy");
   console.log("========================================");
-  console.log("\n--- 0. Setup: Deploying Spammer.sol Target ---");
-  const deployHash = await rootClient.deployContract({
-    abi: SPAMMER_ABI,
-    bytecode: SPAMMER_BYTECODE,
+  const artifact = JSON.parse(
+    fs.readFileSync(BATCH_TOUCHER_ARTIFACT_PATH, "utf-8"),
+  );
+  const hash = await rootClient.deployContract({
+    abi: artifact.abi,
+    bytecode: artifact.bytecode.object,
   });
-  console.log("Deploy tx sent:", deployHash);
-  const receipt = await publicClient.waitForTransactionReceipt({
-    hash: deployHash,
-  });
-  const spammerAddress = receipt.contractAddress!;
-  console.log("Spammer deployed at:", spammerAddress);
+  const receipt = await publicClient.waitForTransactionReceipt({ hash });
+  let toucherAddress = receipt.contractAddress!;
+  console.log("BatchToucher deployed at:", toucherAddress);
 
   let strategy_300mb: SpamSequenceConfig = {
     rpcUrl: RPC_URL,
     chainId: CHAIN_ID,
-    maxGasLimit: 60_000_000n,
-    concurrency: 1,
-    durationSeconds: 300,
+    maxGasLimit: 24_000_000n,
+    concurrency: 2,
+    durationSeconds: 1000,
     strategy: {
-      mode: "mixed",
-      strategies: [
-        {
-          percentage: 80,
-          config: {
-            mode: "transfer",
-            amountPerTx: parseEther("0.0001"),
-            depth: 1,
-          },
-        },
-        {
-          percentage: 10,
-          config: {
-            mode: "write",
-            targetContract: spammerAddress,
-            functionName: "spam",
-            abi: SPAMMER_ABI as any,
-            staticArgs: [],
-          },
-        },
-        {
-          percentage: 10,
-          config: {
-            mode: "deploy",
-            bytecode: SPAMMER_BYTECODE,
-            args: [],
-          },
-        },
-      ],
+      mode: "batch_toucher",
+      inputFile: OUTPUT_FILE,
+      batchSize: 50,
+      toucherAddress: toucherAddress,
     },
   };
 
