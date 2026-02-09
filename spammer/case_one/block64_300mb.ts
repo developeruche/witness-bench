@@ -33,12 +33,15 @@ async function run() {
   await waitForNextBlock(publicClient);
 
   console.log("Fetching execution witness...");
+  const start = performance.now();
   const witness = await publicClient.request({
     method: "debug_executionWitness" as any,
     // @ts-ignore
     params: [`0x${orchestratorOutput.blockNumber.toString(16)}`],
   });
-
+  const end = performance.now();
+  console.log(`Execution witness fetched in ${end - start} ms`);
+  
   const witnessSize = JSON.stringify(witness).length;
   console.log(`Witness size: ${(witnessSize / 1024 / 1024).toFixed(2)} MB`);
 
