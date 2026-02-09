@@ -1,5 +1,6 @@
 ### Case One:
 1. block0_100mb
+- REQUESTOR: [witness-bench]: debug_executionWitness
 - EL: [witness-bench]: debug_executionWitness -> Block: 235 (175.401042ms)
 - CL: [witness-bench]: engine_newPayload -> Block: 235 (20.129667ms)
 - Witness Size: 106.91 MB
@@ -28,6 +29,10 @@
 - EL: [witness-bench]: No data here, 64 block depth is not supported by the current geth implementation.
 - CL: [witness-bench]: engine_newPayload -> Block: 122 (65.061041ms)
 - Witness Size: 
+
+it is important to note that data like this [`- EL: [witness-bench]: debug_executionWitness -> Block: 235 (175.401042ms)`] did not accout for the time it would take for the program requestion the witness to receive the data.
+it only accounts for the time it took for geth to generate the witness. but is cases two we account for the time it takes for the program requestion the witness to receive the data the reciever being the CL (lighthouse). 
+to do an apples to apples compairison we should introduced another field called `REQUESTOR` 
 
 ### Case Two:
 1. 100mb.ts
