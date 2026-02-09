@@ -28,6 +28,8 @@ async function run() {
     await run_with_strategy(strategy_100mb)!; // this is a mechanism for waiting for the next block this is function already
     console.log(`Spammed delta-block ${i + 1}`);
   }
+
+  
   
 
   console.log("Fetching execution witness...");

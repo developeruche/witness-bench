@@ -13,9 +13,7 @@ async function run() {
   });
 
   let strategy_500mb = await setup_500mb();
-  let orchestratorOutput = await run_with_strategy(strategy_500mb)!;
-
-  console.log(orchestratorOutput);
+  await run_with_strategy(strategy_500mb)!;
 
   // The result of this bench can now be obtained from the logs of the CL client. (lighthouse in this case) and the EL (geth in the case)
 }
