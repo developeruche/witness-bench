@@ -6,7 +6,7 @@ set -Eeuo pipefail
 
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 ENCLAVE_NAME=local-testnet
-NETWORK_PARAMS_FILE=$SCRIPT_DIR/network_params.yaml
+NETWORK_PARAMS_FILE=$SCRIPT_DIR/network_params_geth.yaml
 ETHEREUM_PKG_VERSION=5.0.1
 
 BUILD_IMAGE=true
@@ -47,9 +47,8 @@ done
 LH_IMAGE_NAME=$(yq eval ".participants[0].cl_image" $NETWORK_PARAMS_FILE)
 GETH_IMAGE_NAME=$(yq eval ".participants[0].el_image" $NETWORK_PARAMS_FILE)
 
-GETH_ROOT_DIR="$SCRIPT_DIR/../../../go-ethereum"
+GETH_ROOT_DIR="$SCRIPT_DIR/../baseline/go-ethereum"
 
-echo $GETH_ROOT_DIR
 
 if ! command -v docker &> /dev/null; then
     echo "Docker is not installed. Please install Docker and try again."
@@ -61,9 +60,9 @@ if ! command -v kurtosis &> /dev/null; then
     exit
 fi
 
-if ! command -v yq &> /dev/null; then
-    echo "yq not found. Please install yq and try again."
-fi
+# if ! command -v yq &> /dev/null; then
+#     echo "yq not found. Please install yq and try again."
+# fi
 
 if [ "$BUILDER_PROPOSALS" = true ]; then
   yq eval '.participants[0].vc_extra_params = ["--builder-proposals"]' -i $NETWORK_PARAMS_FILE
@@ -85,7 +84,7 @@ fi
 
 if [ "$BUILD_IMAGE" = true ]; then
     echo "Building Lighthouse Docker image."
-    ROOT_DIR="$SCRIPT_DIR/../.."
+    ROOT_DIR="$SCRIPT_DIR/../baseline/lighthouse"
     docker build --build-arg FEATURES=portable,spec-minimal -f $ROOT_DIR/Dockerfile -t $LH_IMAGE_NAME $ROOT_DIR
 
     # Build local GETH image here
