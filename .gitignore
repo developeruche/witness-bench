@@ -2,3 +2,4 @@ node_modules
 .DS_Store
 deployed_addresses.txt
 witness.json
+logs
