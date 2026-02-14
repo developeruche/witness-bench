@@ -1,6 +1,6 @@
 import { defineChain } from "viem";
 
-export const RPC_URL = "http://127.0.0.1:56949";
+export const RPC_URL = "http://127.0.0.1:55864";
 export const ROOT_PRIVATE_KEY =
   "0xbcdf20249abf0ed6d944c0288fad489e33f66b3960d9e6229c1cd214ed3bbe31";
 export const CHAIN_ID = 3151908;

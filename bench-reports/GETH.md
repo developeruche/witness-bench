@@ -1,6 +1,4 @@
 # Benchmark Report: Engine API Witness Generation
-
-**Date:** February 9, 2026
 **Client Pair:** Geth (EL) / Lighthouse (CL)
 **System**: M3 pro, Macbook pro
 

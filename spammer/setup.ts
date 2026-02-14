@@ -13,25 +13,13 @@ import { privateKeyToAccount } from "viem/accounts";
 import {
   BATCH_TOUCHER_ARTIFACT_PATH,
   CHAIN_ID,
+  localTestnet,
   OUTPUT_FILE,
   ROOT_PRIVATE_KEY,
   RPC_URL,
 } from "./constants";
 
 async function main() {
-  let localTestnet = defineChain({
-    id: 3151908,
-    name: "Local Testnet",
-    nativeCurrency: {
-      name: "Ether",
-      symbol: "ETH",
-      decimals: 18,
-    },
-    rpcUrls: {
-      default: { http: [RPC_URL] },
-    },
-  });
-
   const chain = { ...localTestnet, rpcUrls: { default: { http: [RPC_URL] } } };
   const publicClient = createPublicClient({ chain, transport: http(RPC_URL) });
   const rootAccount = privateKeyToAccount(ROOT_PRIVATE_KEY as `0x${string}`);
@@ -54,7 +42,8 @@ async function main() {
   const blastConfig: SpamSequenceConfig = {
     rpcUrl: RPC_URL,
     chainId: CHAIN_ID,
-    maxGasLimit: 9_000_000_000n,
+    maxGasLimit: 2_000_000_000n,
+    // maxGasLimit: 9_000_000_000n,
     concurrency: 5,
     durationSeconds: 1000,
     strategy: {
@@ -65,8 +54,8 @@ async function main() {
     },
   };
 
-  for (let i = 0; i < 13; i++) {
-    console.log(`Spam run ${i + 1} of 13`);
+  for (let i = 0; i < 60; i++) {
+    console.log(`Spam run ${i + 1} of 60`);
     const orchestrator = new SpamOrchestrator(
       blastConfig,
       ROOT_PRIVATE_KEY as `0x${string}`,

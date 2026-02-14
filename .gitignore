@@ -3,3 +3,5 @@ node_modules
 deployed_addresses.txt
 witness.json
 logs
+target
+ethereum-package
