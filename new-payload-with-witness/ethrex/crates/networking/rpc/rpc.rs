@@ -75,10 +75,11 @@ use std::{
     collections::HashMap,
     future::IntoFuture,
     net::SocketAddr,
+    path::Path,
     sync::{Arc, Mutex},
     time::Duration,
 };
-use tokio::net::TcpListener;
+use tokio::net::{TcpListener, UnixListener};
 use tokio::sync::{
     Mutex as TokioMutex,
     mpsc::{UnboundedSender, unbounded_channel},
@@ -88,6 +89,8 @@ use tokio::time::timeout;
 use tower_http::cors::CorsLayer;
 use tracing::{error, info, warn};
 use tracing_subscriber::{EnvFilter, Registry, reload};
+
+const IPC_PATH: &str = "/tmp/ethrex.sock";
 
 #[cfg(all(feature = "jemalloc_profiling", target_os = "linux"))]
 use axum::response::IntoResponse;
@@ -388,32 +391,31 @@ pub const FILTER_DURATION: Duration = {
     }
 };
 
-    /// Channel for sending blocks to the block executor worker thread.
-    pub fn start_block_executor(
-        blockchain: Arc<Blockchain>,
-    ) -> UnboundedSender<(
+/// Channel for sending blocks to the block executor worker thread.
+pub fn start_block_executor(
+    blockchain: Arc<Blockchain>,
+) -> UnboundedSender<(
+    oneshot::Sender<Result<Option<ExecutionWitness>, ChainError>>,
+    Block,
+    bool,
+)> {
+    let (block_worker_channel, mut block_receiver) = unbounded_channel::<(
         oneshot::Sender<Result<Option<ExecutionWitness>, ChainError>>,
         Block,
         bool,
-    )> {
-        let (block_worker_channel, mut block_receiver) = unbounded_channel::<(
-            oneshot::Sender<Result<Option<ExecutionWitness>, ChainError>>,
-            Block,
-            bool,
-        )>();
-        std::thread::Builder::new()
-            .name("block_executor".to_string())
-            .spawn(move || {
-                while let Some((notify, block, compute_witness)) = block_receiver.blocking_recv() {
-                    let _ = notify
-                        .send(blockchain.add_block_pipeline(block, compute_witness))
-                        .inspect_err(|_| tracing::error!("failed to notify caller"));
-                }
-            })
-            .expect("Falied to spawn block_executor thread");
-        block_worker_channel
-    }
-
+    )>();
+    std::thread::Builder::new()
+        .name("block_executor".to_string())
+        .spawn(move || {
+            while let Some((notify, block, compute_witness)) = block_receiver.blocking_recv() {
+                let _ = notify
+                    .send(blockchain.add_block_pipeline(block, compute_witness))
+                    .inspect_err(|_| tracing::error!("failed to notify caller"));
+            }
+        })
+        .expect("Falied to spawn block_executor thread");
+    block_worker_channel
+}
 
 /// Starts the JSON-RPC API servers.
 ///
@@ -550,13 +552,29 @@ pub async fn start_api(
         // This is needed to receive payloads bigger than the default limit of 2MB
         .layer(DefaultBodyLimit::max(256 * 1024 * 1024));
 
-    let authrpc_listener = TcpListener::bind(authrpc_addr)
-        .await
-        .map_err(|error| RpcErr::Internal(error.to_string()))?;
-    let authrpc_server = axum::serve(authrpc_listener, authrpc_router)
+    // IPC Listener Setup
+    let ipc_path = Path::new(IPC_PATH);
+    if ipc_path.exists() {
+        if let Err(e) = std::fs::remove_file(ipc_path) {
+            warn!("Failed to remove existing IPC socket file: {}", e);
+        }
+    }
+
+    let authrpc_listener_ipc =
+        UnixListener::bind(ipc_path).map_err(|error| RpcErr::Internal(error.to_string()))?;
+
+    let authrpc_server_ipc = axum::serve(authrpc_listener_ipc, authrpc_router.clone())
         .with_graceful_shutdown(shutdown_signal())
         .into_future();
-    info!("Starting Auth-RPC server at {authrpc_addr}");
+    info!("Starting Auth-RPC IPC server at {IPC_PATH}");
+
+    let authrpc_listener_tcp =
+        TcpListener::bind(authrpc_addr).await.map_err(|error| RpcErr::Internal(error.to_string()))?;
+
+    let authrpc_server_tcp = axum::serve(authrpc_listener_tcp, authrpc_router)
+        .with_graceful_shutdown(shutdown_signal())
+        .into_future();
+    info!("Starting Auth-RPC TCP server at {authrpc_addr}");
 
     if let Some(address) = ws_addr {
         let ws_handler = |ws: WebSocketUpgrade, ctx| async {
@@ -574,10 +592,10 @@ pub async fn start_api(
             .into_future();
         info!("Starting WS server at {address}");
 
-        let _ = tokio::try_join!(authrpc_server, http_server, ws_server)
+        let _ = tokio::try_join!(authrpc_server_ipc, authrpc_server_tcp, http_server, ws_server)
             .inspect_err(|e| error!("Error shutting down servers: {e:?}"));
     } else {
-        let _ = tokio::try_join!(authrpc_server, http_server)
+        let _ = tokio::try_join!(authrpc_server_ipc, authrpc_server_tcp, http_server)
             .inspect_err(|e| error!("Error shutting down servers: {e:?}"));
     }
 

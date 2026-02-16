@@ -927,8 +927,6 @@ fn validate_block_hash(payload: &ExecutionPayload, block: &Block) -> Result<(), 
     Ok(())
 }
 
-
-
 async fn try_execute_payload(
     block: Block,
     context: &RpcApiContext,
@@ -1113,13 +1111,13 @@ async fn get_payload(payload_id: u64, context: &RpcApiContext) -> Result<Payload
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Arc;
-    use crate::test_utils::{setup_store, test_header}; // removed default_context_with_storage
-    use ethrex_common::types::{Block, BlockBody};
-    use ethrex_blockchain::BlockchainOptions;
-    use crate::rpc::{RpcApiContext, NodeData, ClientVersion, start_block_executor};
     use crate::eth::gas_tip_estimator::GasTipEstimator;
+    use crate::rpc::{ClientVersion, NodeData, RpcApiContext, start_block_executor};
+    use crate::test_utils::{setup_store, test_header}; // removed default_context_with_storage
+    use ethrex_blockchain::BlockchainOptions;
     use ethrex_common::types::DEFAULT_BUILDER_GAS_CEIL;
+    use ethrex_common::types::{Block, BlockBody};
+    use std::sync::Arc;
     use tokio::sync::Mutex as TokioMutex;
 
     #[tokio::test]
@@ -1130,20 +1128,20 @@ mod tests {
 
         // 1. Setup store and context
         let store = setup_store().await;
-        
+
         let mut opts = BlockchainOptions::default();
         opts.precompute_witnesses = false; // Ensure it's false to test the compute_witness flag plumbing
         let blockchain = Arc::new(ethrex_blockchain::Blockchain::new(store.clone(), opts));
-        
+
         let block_worker_channel = start_block_executor(blockchain.clone());
-        
+
         let local_node_record = crate::test_utils::example_local_node_record();
-        
+
         let context = RpcApiContext {
             storage: store.clone(),
             blockchain: blockchain.clone(),
             active_filters: Default::default(),
-            syncer: Some(Arc::new(crate::test_utils::dummy_sync_manager().await)), 
+            syncer: Some(Arc::new(crate::test_utils::dummy_sync_manager().await)),
             peer_handler: None,
             node_data: NodeData {
                 jwt_secret: Default::default(),
@@ -1164,7 +1162,7 @@ mod tests {
             gas_ceil: DEFAULT_BUILDER_GAS_CEIL,
             block_worker_channel,
         };
-        
+
         let genesis_hash = store.get_canonical_block_hash(0).await.unwrap().unwrap();
 
         // 2. Create a valid block (genesis + 1)
@@ -1175,82 +1173,108 @@ mod tests {
             withdrawals: Some(vec![]),
         };
         let mut block = Block::new(block_header.clone(), block_body);
-        
+
         // 3. Link to genesis and fix header fields to be valid
         let genesis_hash = store.get_canonical_block_hash(0).await.unwrap().unwrap();
-        let genesis_header = store.get_block_header_by_hash(genesis_hash).unwrap().unwrap();
-        
+        let genesis_header = store
+            .get_block_header_by_hash(genesis_hash)
+            .unwrap()
+            .unwrap();
+
         block.header.parent_hash = genesis_hash;
         block.header.gas_limit = genesis_header.gas_limit; // Keep gas limit same as parent to avoid validation error
         block.header.timestamp = genesis_header.timestamp + 12; // Ensure timestamp is after parent (e.g. 1 slot)
         block.header.number = genesis_header.number + 1;
-        
+
         // Fix base fee (EIP-1559)
         let expected_base_fee = ethrex_common::types::calculate_base_fee_per_gas(
             block.header.gas_limit,
             genesis_header.gas_limit,
             genesis_header.gas_used,
-            genesis_header.base_fee_per_gas.unwrap_or(ethrex_common::types::INITIAL_BASE_FEE),
+            genesis_header
+                .base_fee_per_gas
+                .unwrap_or(ethrex_common::types::INITIAL_BASE_FEE),
             ethrex_common::types::ELASTICITY_MULTIPLIER,
-        ).expect("Failed to calculate base fee");
-        
+        )
+        .expect("Failed to calculate base fee");
+
         block.header.base_fee_per_gas = Some(expected_base_fee);
-        
+
         // 4. Build a valid block using PayloadBuildContext to set correct state root and other fields
         use ethrex_blockchain::payload::PayloadBuildContext;
-        
-        let mut build_context = PayloadBuildContext::new(
-            block,
-            &store,
-            &context.blockchain.options.r#type
-        ).expect("Failed to create PayloadBuildContext");
-        
+
+        let mut build_context =
+            PayloadBuildContext::new(block, &store, &context.blockchain.options.r#type)
+                .expect("Failed to create PayloadBuildContext");
+
         // Apply system operations (beacon root etc) which updates state
         if let ethrex_blockchain::BlockchainType::L1 = context.blockchain.options.r#type {
-            context.blockchain.apply_system_operations(&mut build_context).expect("Failed to apply system operations");
+            context
+                .blockchain
+                .apply_system_operations(&mut build_context)
+                .expect("Failed to apply system operations");
         }
-        
-        context.blockchain.apply_withdrawals(&mut build_context).expect("Failed to apply withdrawals");
+
+        context
+            .blockchain
+            .apply_withdrawals(&mut build_context)
+            .expect("Failed to apply withdrawals");
         // No transactions to fill
-        context.blockchain.extract_requests(&mut build_context).expect("Failed to extract requests");
-        
-        context.blockchain.finalize_payload(&mut build_context).expect("Failed to finalize payload");
-        
+        context
+            .blockchain
+            .extract_requests(&mut build_context)
+            .expect("Failed to extract requests");
+
+        context
+            .blockchain
+            .finalize_payload(&mut build_context)
+            .expect("Failed to finalize payload");
+
         let block = build_context.payload;
-        
+
         // Updated block has correct state root, gas used, etc.
-        
+
         // Ensure blockchain thinks it is synced to generate witness
         context.blockchain.set_synced();
-        
+
         // 5. Call try_execute_payload
         // We use genesis_hash as latest_valid_hash
         let result = try_execute_payload(block, &context, genesis_hash).await;
-        
+
         // 5. Assertions
         assert!(result.is_ok(), "Execution failed: {:?}", result.err());
         let status = result.unwrap();
-        
+
         // Verify status is Valid
         // Note: PayloadStatus::valid_with_hash might be what is returned
         match status.status {
-            crate::types::payload::PayloadValidationStatus::Valid => {},
+            crate::types::payload::PayloadValidationStatus::Valid => {}
             _ => panic!("Payload status not valid: {:?}", status),
         }
-        
+
         // 6. Verify witness is present
-        assert!(status.witness.is_some(), "Witness field is missing in PayloadStatus. Status: {:?}", status);
-        
+        assert!(
+            status.witness.is_some(),
+            "Witness field is missing in PayloadStatus. Status: {:?}",
+            status
+        );
+
         // 7. Validate witness format
         let witness_json = status.witness.unwrap();
-        
+
         // Expect a hex string
         assert!(witness_json.is_string(), "Witness should be a hex string");
         let witness_str = witness_json.as_str().unwrap();
-        assert!(witness_str.starts_with("0x"), "Witness hex string should start with 0x");
-        
+        assert!(
+            witness_str.starts_with("0x"),
+            "Witness hex string should start with 0x"
+        );
+
         // Decode hex
         let witness_bytes = hex::decode(&witness_str[2..]).expect("Failed to decode hex witness");
-        assert!(!witness_bytes.is_empty(), "Witness bytes should not be empty");
+        assert!(
+            !witness_bytes.is_empty(),
+            "Witness bytes should not be empty"
+        );
     }
 }

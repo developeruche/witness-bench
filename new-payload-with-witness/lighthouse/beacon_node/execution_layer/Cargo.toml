@@ -23,6 +23,10 @@ hex = { workspace = true }
 jsonwebtoken = "9"
 keccak-hash = "0.10.0"
 kzg = { workspace = true }
+hyper-util = { version = "0.1", features = ["client", "client-legacy", "http1", "tokio"] }
+hyper = { workspace = true }
+http-body-util = "0.1"
+tower = { version = "0.4", features = ["util"] }
 lighthouse_version = { workspace = true }
 logging = { workspace = true }
 lru = { workspace = true }

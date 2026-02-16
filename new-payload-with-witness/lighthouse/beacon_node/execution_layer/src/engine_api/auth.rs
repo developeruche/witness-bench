@@ -69,6 +69,7 @@ pub fn strip_prefix(s: &str) -> &str {
 }
 
 /// Contains the JWT secret and claims parameters.
+#[derive(Clone)]
 pub struct Auth {
     key: EncodingKey,
     id: Option<String>,

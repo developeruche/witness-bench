@@ -4,7 +4,7 @@ use super::*;
 use crate::auth::Auth;
 use crate::json_structures::*;
 use lighthouse_version::{COMMIT_PREFIX, VERSION};
-use reqwest::header::CONTENT_TYPE;
+use reqwest::header::CONTENT_TYPE as REQWEST_CONTENT_TYPE;
 use sensitive_url::SensitiveUrl;
 use serde::de::DeserializeOwned;
 use serde_json::json;
@@ -15,8 +15,81 @@ use tracing::info;
 
 use std::time::{Duration, Instant};
 
+use bytes::Bytes;
 pub use deposit_log::{DepositLog, Log};
+use http_body_util::{BodyExt, Full};
+use hyper::client::conn::http1;
+use hyper::{
+    Method, Request, Response, StatusCode,
+    body::Incoming,
+    header::{AUTHORIZATION, CONTENT_TYPE as HYPER_CONTENT_TYPE},
+};
 pub use reqwest::Client;
+
+use hyper::rt::{Read, Write, ReadBufCursor};
+use hyper_util::client::legacy::connect::{Connection, Connected};
+
+use std::pin::Pin;
+use std::task::{Context, Poll};
+use tower::Service;
+
+#[derive(Clone, Copy, Debug)]
+pub struct UnixConnector;
+
+impl Service<hyper::Uri> for UnixConnector {
+    type Response = UnixStreamWrapper;
+    type Error = std::io::Error;
+    type Future = Pin<Box<dyn std::future::Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+
+    fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn call(&mut self, _req: hyper::Uri) -> Self::Future {
+        Box::pin(async move {
+            let stream = tokio::net::UnixStream::connect(IPC_PATH).await?;
+            Ok(UnixStreamWrapper(hyper_util::rt::TokioIo::new(stream)))
+        })
+    }
+}
+
+pub struct UnixStreamWrapper(hyper_util::rt::TokioIo<tokio::net::UnixStream>);
+
+impl Connection for UnixStreamWrapper {
+    fn connected(&self) -> Connected {
+        Connected::new()
+    }
+}
+
+impl Read for UnixStreamWrapper {
+    fn poll_read(
+        mut self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        buf: ReadBufCursor<'_>,
+    ) -> Poll<std::io::Result<()>> {
+        Pin::new(&mut self.0).poll_read(cx, buf)
+    }
+}
+
+impl Write for UnixStreamWrapper {
+    fn poll_write(
+        mut self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        buf: &[u8],
+    ) -> Poll<std::io::Result<usize>> {
+        Pin::new(&mut self.0).poll_write(cx, buf)
+    }
+
+    fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<std::io::Result<()>> {
+        Pin::new(&mut self.0).poll_flush(cx)
+    }
+
+    fn poll_shutdown(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<std::io::Result<()>> {
+        Pin::new(&mut self.0).poll_shutdown(cx)
+    }
+}
+
+pub const IPC_PATH: &str = "/tmp/ethrex.sock";
 
 const STATIC_ID: u32 = 1;
 pub const JSONRPC_VERSION: &str = "2.0";
@@ -102,6 +175,89 @@ pub static LIGHTHOUSE_JSON_CLIENT_VERSION: LazyLock<JsonClientVersionV1> =
         commit: COMMIT_PREFIX.to_string(),
     });
 
+pub struct HttpJsonRpc {
+    pub client: Client,
+    pub ipc_client: hyper_util::client::legacy::Client<UnixConnector, Full<Bytes>>,
+    pub url: SensitiveUrl,
+    pub execution_timeout_multiplier: u32,
+    pub engine_capabilities_cache: Mutex<Option<CachedResponse<EngineCapabilities>>>,
+    pub engine_version_cache: Mutex<Option<CachedResponse<Vec<ClientVersionV1>>>>,
+    auth: Option<Auth>,
+    #[allow(dead_code)]
+    block_number: u64,
+}
+
+impl HttpJsonRpc {
+    pub fn new(
+        url: SensitiveUrl,
+        execution_timeout_multiplier: Option<u32>,
+    ) -> Result<Self, Error> {
+        let client = Client::builder()
+            .timeout(Duration::from_secs(60))
+            .build()
+            .map_err(|e| Error::RequestFailed(format!("Reqwest client build error: {}", e)))?;
+
+        let ipc_client = hyper_util::client::legacy::Client::builder(hyper_util::rt::TokioExecutor::new())
+            .build(UnixConnector);
+
+        Ok(Self {
+            client,
+            ipc_client,
+            url,
+            execution_timeout_multiplier: execution_timeout_multiplier.unwrap_or(1),
+            engine_capabilities_cache: Mutex::new(None),
+            engine_version_cache: Mutex::new(None),
+            auth: None,
+            block_number: 0,
+        })
+    }
+
+    pub fn new_with_auth(
+        url: SensitiveUrl,
+        auth: Auth,
+        execution_timeout_multiplier: Option<u32>,
+    ) -> Result<Self, Error> {
+        let client = Client::builder()
+            .timeout(Duration::from_secs(60))
+            .build()
+            .map_err(|e| Error::RequestFailed(format!("Reqwest client build error: {}", e)))?;
+
+        let ipc_client = hyper_util::client::legacy::Client::builder(hyper_util::rt::TokioExecutor::new())
+            .build(UnixConnector);
+
+        Ok(Self {
+            client,
+            ipc_client,
+            url,
+            execution_timeout_multiplier: execution_timeout_multiplier.unwrap_or(1),
+            engine_capabilities_cache: Mutex::new(None),
+            engine_version_cache: Mutex::new(None),
+            auth: Some(auth),
+            block_number: 0,
+        })
+    }
+
+    pub fn new_with_client(
+        client: Client,
+        url: SensitiveUrl,
+        auth: Option<Auth>,
+        execution_timeout_multiplier: u32,
+    ) -> Self {
+        let ipc_client = hyper_util::client::legacy::Client::builder(hyper_util::rt::TokioExecutor::new())
+            .build(UnixConnector);
+
+        Self {
+            client,
+            ipc_client,
+            url,
+            execution_timeout_multiplier,
+            engine_capabilities_cache: Mutex::new(None),
+            engine_version_cache: Mutex::new(None),
+            auth,
+            block_number: 0,
+        }
+    }
+}
 /// Contains methods to convert arbitrary bytes to an ETH2 deposit contract object.
 pub mod deposit_log {
     use ssz::Decode;
@@ -599,45 +755,8 @@ impl<T: Clone> CachedResponse<T> {
     }
 }
 
-pub struct HttpJsonRpc {
-    pub client: Client,
-    pub url: SensitiveUrl,
-    pub execution_timeout_multiplier: u32,
-    pub engine_capabilities_cache: Mutex<Option<CachedResponse<EngineCapabilities>>>,
-    pub engine_version_cache: Mutex<Option<CachedResponse<Vec<ClientVersionV1>>>>,
-    auth: Option<Auth>,
-}
 
 impl HttpJsonRpc {
-    pub fn new(
-        url: SensitiveUrl,
-        execution_timeout_multiplier: Option<u32>,
-    ) -> Result<Self, Error> {
-        Ok(Self {
-            client: Client::builder().build()?,
-            url,
-            execution_timeout_multiplier: execution_timeout_multiplier.unwrap_or(1),
-            engine_capabilities_cache: Mutex::new(None),
-            engine_version_cache: Mutex::new(None),
-            auth: None,
-        })
-    }
-
-    pub fn new_with_auth(
-        url: SensitiveUrl,
-        auth: Auth,
-        execution_timeout_multiplier: Option<u32>,
-    ) -> Result<Self, Error> {
-        Ok(Self {
-            client: Client::builder().build()?,
-            url,
-            execution_timeout_multiplier: execution_timeout_multiplier.unwrap_or(1),
-            engine_capabilities_cache: Mutex::new(None),
-            engine_version_cache: Mutex::new(None),
-            auth: Some(auth),
-        })
-    }
-
     pub async fn rpc_request<D: DeserializeOwned>(
         &self,
         method: &str,
@@ -651,19 +770,43 @@ impl HttpJsonRpc {
             id: json!(STATIC_ID),
         };
 
-        let mut request = self
-            .client
-            .post(self.url.full.clone())
-            .timeout(timeout)
-            .header(CONTENT_TYPE, "application/json")
-            .json(&body);
+        let body_bytes = serde_json::to_vec(&body)?;
 
-        // Generate and add a jwt token to the header if auth is defined.
+        let mut request_builder = Request::builder()
+            .method(Method::POST)
+            .uri("http://localhost")
+            .header(HYPER_CONTENT_TYPE, "application/json");
+
         if let Some(auth) = &self.auth {
-            request = request.bearer_auth(auth.generate_token()?);
-        };
+            if let Ok(token) = auth.generate_token() {
+                request_builder =
+                    request_builder.header(AUTHORIZATION, format!("Bearer {}", token));
+            }
+        }
 
-        let body: JsonResponseBody = request.send().await?.error_for_status()?.json().await?;
+        let request = request_builder
+            .body(Full::new(Bytes::from(body_bytes)))
+            .map_err(|e| Error::RequestFailed(format!("Request build error: {}", e)))?;
+
+        let response = tokio::time::timeout(timeout, self.ipc_client.request(request))
+            .await
+            .map_err(|_| Error::RequestFailed("Request timeout".into()))?
+            .map_err(|e| Error::RequestFailed(format!("Hyper request error: {}", e)))?;
+
+        if !response.status().is_success() {
+            return Err(Error::BadResponse(format!(
+                "Server returned status: {}",
+                response.status()
+            )));
+        }
+
+        let response_body_bytes = response
+            .collect()
+            .await
+            .map_err(|e| Error::RequestFailed(format!("Read body error: {}", e)))?
+            .to_bytes();
+
+        let body: JsonResponseBody = serde_json::from_slice(&response_body_bytes)?;
 
         match (body.result, body.error) {
             (result, None) => serde_json::from_value(result).map_err(Into::into),
@@ -822,14 +965,21 @@ impl HttpJsonRpc {
             )
             .await?;
         let block_number = new_payload_request_deneb.execution_payload.block_number;
-        info!("[WITNESS_BENCH] CL Round-Trip Latency: {:?} (Block {})", start.elapsed(), block_number);
+        info!(
+            "[WITNESS_BENCH] CL Round-Trip Latency: {:?} (Block {})",
+            start.elapsed(),
+            block_number
+        );
 
         if let Some(witness) = &response.witness {
             let size = match witness {
                 serde_json::Value::String(s) => s.len().saturating_sub(2) / 2,
                 _ => 0,
             };
-            info!("[WITNESS_BENCH] CL Received Witness Size: {} bytes (Block {})", size, block_number);
+            info!(
+                "[WITNESS_BENCH] CL Received Witness Size: {} bytes (Block {})",
+                size, block_number
+            );
         }
 
         Ok(response.into())
@@ -859,14 +1009,21 @@ impl HttpJsonRpc {
             )
             .await?;
         let block_number = new_payload_request_electra.execution_payload.block_number;
-        info!("[WITNESS_BENCH] CL Round-Trip Latency: {:?} (Block {})", start.elapsed(), block_number);
+        info!(
+            "[WITNESS_BENCH] CL Round-Trip Latency: {:?} (Block {})",
+            start.elapsed(),
+            block_number
+        );
 
         if let Some(witness) = &response.witness {
             let size = match witness {
                 serde_json::Value::String(s) => s.len().saturating_sub(2) / 2,
                 _ => 0,
             };
-            info!("[WITNESS_BENCH] CL Received Witness Size: {} bytes (Block {})", size, block_number);
+            info!(
+                "[WITNESS_BENCH] CL Received Witness Size: {} bytes (Block {})",
+                size, block_number
+            );
         }
 
         Ok(response.into())
@@ -894,14 +1051,21 @@ impl HttpJsonRpc {
             )
             .await?;
         let block_number = new_payload_request_fulu.execution_payload.block_number;
-        info!("[WITNESS_BENCH] CL Round-Trip Latency: {:?} (Block {})", start.elapsed(), block_number);
+        info!(
+            "[WITNESS_BENCH] CL Round-Trip Latency: {:?} (Block {})",
+            start.elapsed(),
+            block_number
+        );
 
         if let Some(witness) = &response.witness {
             let size = match witness {
                 serde_json::Value::String(s) => s.len().saturating_sub(2) / 2,
                 _ => 0,
             };
-            info!("[WITNESS_BENCH] CL Received Witness Size: {} bytes (Block {})", size, block_number);
+            info!(
+                "[WITNESS_BENCH] CL Received Witness Size: {} bytes (Block {})",
+                size, block_number
+            );
         }
 
         Ok(response.into())
@@ -929,14 +1093,21 @@ impl HttpJsonRpc {
             )
             .await?;
         let block_number = new_payload_request_gloas.execution_payload.block_number;
-        info!("[WITNESS_BENCH] CL Round-Trip Latency: {:?} (Block {})", start.elapsed(), block_number);
+        info!(
+            "[WITNESS_BENCH] CL Round-Trip Latency: {:?} (Block {})",
+            start.elapsed(),
+            block_number
+        );
 
         if let Some(witness) = &response.witness {
             let size = match witness {
                 serde_json::Value::String(s) => s.len().saturating_sub(2) / 2,
                 _ => 0,
             };
-            info!("[WITNESS_BENCH] CL Received Witness Size: {} bytes (Block {})", size, block_number);
+            info!(
+                "[WITNESS_BENCH] CL Received Witness Size: {} bytes (Block {})",
+                size, block_number
+            );
         }
 
         Ok(response.into())
