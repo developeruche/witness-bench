@@ -42,7 +42,7 @@ async function main() {
   const blastConfig: SpamSequenceConfig = {
     rpcUrl: RPC_URL,
     chainId: CHAIN_ID,
-    maxGasLimit: 2_000_000_000n,
+    maxGasLimit: 1_000_000_000n,
     // maxGasLimit: 9_000_000_000n,
     concurrency: 5,
     durationSeconds: 1000,

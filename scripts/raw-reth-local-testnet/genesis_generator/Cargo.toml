@@ -1,0 +1,32 @@
+[package]
+name = "genesis_generator"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.5.4", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+hex = "0.4"
+rand = "0.8"
+ssz = { package = "ethereum_ssz", version = "0.9" }
+eth2_interop_keypairs = { path = "../../../baseline/lighthouse/common/eth2_interop_keypairs" }
+# kzg for trusted setup
+kzg = { path = "../../../baseline/lighthouse/crypto/kzg" }
+
+# Lighthouse dependencies
+types = { path = "../../../baseline/lighthouse/consensus/types" }
+genesis = { path = "../../../baseline/lighthouse/beacon_node/genesis" }
+eth2_network_config = { path = "../../../baseline/lighthouse/common/eth2_network_config" }
+state_processing = { path = "../../../baseline/lighthouse/consensus/state_processing" }
+account_utils = { path = "../../../baseline/lighthouse/common/account_utils" }
+eth2_wallet = { path = "../../../baseline/lighthouse/crypto/eth2_wallet" }
+directory = { path = "../../../baseline/lighthouse/common/directory" }
+environment = { path = "../../../baseline/lighthouse/lighthouse/environment" }
+sensitive_url = { path = "../../../baseline/lighthouse/common/sensitive_url" }
+task_executor = { path = "../../../baseline/lighthouse/common/task_executor" }
+eth2_key_derivation = { path = "../../../baseline/lighthouse/crypto/eth2_key_derivation" }
+
+[features]
+default = []

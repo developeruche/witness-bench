@@ -1,0 +1,103 @@
+{
+  "alloc": {
+    "0x123463a4B065722E99115D6c222f267d9cABb524": {
+      "balance": "0x1bc16d674ec80000"
+    },
+    "0x2c57d1CFC6d5f8E4182a56b4cf75421472eBAEa4": {
+      "balance": "0x3635c9adc5dea00000"
+    },
+    "0x3e95dFbBaF6B348396E6674C7871546dCC568e56": {
+      "balance": "0x3635c9adc5dea00000"
+    },
+    "0x4d1CB4eB7969f8806E2CaAc0cbbB71f88C8ec413": {
+      "balance": "0x3635c9adc5dea00000"
+    },
+    "0x589A698b7b7dA0Bec545177D3963A2741105C7C9": {
+      "balance": "0x3635c9adc5dea00000"
+    },
+    "0x5918b2e647464d4743601a865753e64C8059Dc4F": {
+      "balance": "0x3635c9adc5dea00000"
+    },
+    "0x614561D2d143621E126e87831AEF287678B442b8": {
+      "balance": "0x3635c9adc5dea00000"
+    },
+    "0x65D08a056c17Ae13370565B04cF77D2AfA1cB9FA": {
+      "balance": "0x3635c9adc5dea00000"
+    },
+    "0x741bFE4802cE1C4b5b00F9Df2F5f179A1C89171A": {
+      "balance": "0x3635c9adc5dea00000"
+    },
+    "0x802dCbE1B1A97554B4F50DB5119E37E8e7336417": {
+      "balance": "0x3635c9adc5dea00000"
+    },
+    "0x8943545177806ED17B9F23F0a21ee5948eCaa776": {
+      "balance": "0x3635c9adc5dea00000"
+    },
+    "0xAe95d8DA9244C37CaC0a3e16BA966a8e852Bb6D6": {
+      "balance": "0x3635c9adc5dea00000"
+    },
+    "0xD8F3183DEF51A987222D845be228e0Bbb932C222": {
+      "balance": "0x3635c9adc5dea00000"
+    },
+    "0xD9211042f35968820A3407ac3d80C725f8F75c14": {
+      "balance": "0x3635c9adc5dea00000"
+    },
+    "0xE25583099BA105D9ec0A67f5Ae86D90e50036425": {
+      "balance": "0x3635c9adc5dea00000"
+    },
+    "0xF5504cE2BcC52614F121aff9b93b2001d92715CA": {
+      "balance": "0x3635c9adc5dea00000"
+    },
+    "0xF61E98E7D47aB884C244E39E031978E33162ff4b": {
+      "balance": "0x3635c9adc5dea00000"
+    },
+    "0xafF0CA253b97e54440965855cec0A8a2E2399896": {
+      "balance": "0x3635c9adc5dea00000"
+    },
+    "0xc3913d4D8bAb4914328651C2EAE817C8b78E1f4c": {
+      "balance": "0x3635c9adc5dea00000"
+    },
+    "0xf1424826861ffbbD25405F5145B5E50d0F1bFc90": {
+      "balance": "0x3635c9adc5dea00000"
+    },
+    "0xf93Ee4Cf8c6c40b329b0c0626F28333c132CF241": {
+      "balance": "0x3635c9adc5dea00000"
+    },
+    "0xfDCe42116f541fc8f7b0776e2B30832bD5621C85": {
+      "balance": "0x3635c9adc5dea00000"
+    }
+  },
+  "baseFeePerGas": "0x7",
+  "coinbase": "0x0000000000000000000000000000000000000000",
+  "config": {
+    "arrowGlacierBlock": 0,
+    "berlinBlock": 0,
+    "byzantiumBlock": 0,
+    "cancunTime": 0,
+    "chainId": 1234,
+    "constantinopleBlock": 0,
+    "eip150Block": 0,
+    "eip155Block": 0,
+    "eip158Block": 0,
+    "grayGlacierBlock": 0,
+    "homesteadBlock": 0,
+    "istanbulBlock": 0,
+    "londonBlock": 0,
+    "mergeNetsplitBlock": 0,
+    "muirGlacierBlock": 0,
+    "petersburgBlock": 0,
+    "pragueTime": 0,
+    "shanghaiTime": 0,
+    "terminalTotalDifficulty": 0,
+    "terminalTotalDifficultyPassed": true
+  },
+  "difficulty": "0x0",
+  "extraData": "0x",
+  "gasLimit": "0xA7A3582000",
+  "gasUsed": "0x0",
+  "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "nonce": "0x0",
+  "number": "0x0",
+  "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "timestamp": "0x6994e1a7"
+}
