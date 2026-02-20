@@ -22,7 +22,7 @@ async function run() {
   console.log("Fetching execution witness...");
   const start = performance.now();
   const witness = await publicClient.request({
-    method: "debug_executionWitness" as any,
+    method: "indexed_witnessByNumber" as any,
     // @ts-ignore
     params: [`0x${orchestratorOutput.blockNumber.toString(16)}`],
   });

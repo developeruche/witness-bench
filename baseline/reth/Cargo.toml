@@ -158,7 +158,7 @@ members = [
     "testing/ef-tests/",
     "testing/testing-utils",
     "testing/runner",
-    "crates/tracing-otlp",
+    "crates/tracing-otlp", "crates/ew_exex",
 ]
 default-members = ["bin/reth"]
 exclude = ["docs/cli"]
@@ -438,6 +438,8 @@ reth-trie-sparse-parallel = { path = "crates/trie/sparse-parallel" }
 reth-zstd-compressors = { path = "crates/storage/zstd-compressors", default-features = false }
 reth-ress-protocol = { path = "crates/ress/protocol" }
 reth-ress-provider = { path = "crates/ress/provider" }
+ew_exex = { path = "crates/ew_exex" }
+
 
 # revm
 revm = { version = "34.0.0", default-features = false }
@@ -709,6 +711,7 @@ vergen = "9.1.0"
 visibility = "0.1.1"
 walkdir = "2.3.3"
 vergen-git2 = "9.1.0"
+
 
 # networking
 ipnet = "2.11"

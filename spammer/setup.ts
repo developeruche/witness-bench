@@ -42,7 +42,8 @@ async function main() {
   const blastConfig: SpamSequenceConfig = {
     rpcUrl: RPC_URL,
     chainId: CHAIN_ID,
-    maxGasLimit: 1_000_000_000n,
+    // maxGasLimit: 200_000_000n,
+    maxGasLimit: 2_000_000_000n,
     // maxGasLimit: 9_000_000_000n,
     concurrency: 5,
     durationSeconds: 1000,
@@ -64,18 +65,11 @@ async function main() {
     try {
       await orchestrator.setup(parseEther("1"));
 
-      console.log("Waiting for next block to ensure packing...");
-      await waitForNextBlock(publicClient);
-      console.log("Block mined! Starting spam immediately...");
-
       let orchestratorOutput = await orchestrator.start();
       console.log(orchestratorOutput);
     } catch (error) {
       console.error("Spam failed:", error);
     }
-
-    await waitForNextBlock(publicClient);
-    console.log("Waiting for next block...");
   }
 }
 

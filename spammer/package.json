@@ -5,6 +5,8 @@
   "main": "index.ts",
   "scripts": {
     "start": "tsx index.ts",
+    "cp": "tsx check_pool.ts",
+    "ps": "tsx pool_stats.ts",
     "tunner": "tsx --max-old-space-size=8192 tunner.ts",
     "b:setup": "tsx setup.ts",
     "gen": "tsx gen.ts",

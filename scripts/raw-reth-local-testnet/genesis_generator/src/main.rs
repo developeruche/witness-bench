@@ -111,6 +111,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     testnet_spec.capella_fork_epoch = Some(Epoch::new(0));
     testnet_spec.deneb_fork_epoch = Some(Epoch::new(0));
     testnet_spec.electra_fork_epoch = Some(Epoch::new(0));
+    testnet_spec.seconds_per_slot = 12;
     
     // Also update config to reflect these
     config = Config::from_chain_spec::<MainnetEthSpec>(&testnet_spec);

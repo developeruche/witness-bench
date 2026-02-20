@@ -213,7 +213,16 @@ where
 
     let withdrawals_rlp_length = attributes.withdrawals().length();
 
+    let build_start_time = std::time::Instant::now();
+    let max_execution_duration = std::time::Duration::from_millis(300);
+
     while let Some(pool_tx) = best_txs.next() {
+        // Yield a partial block if we're taking too long (like Geth)
+        if build_start_time.elapsed() >= max_execution_duration {
+            tracing::info!(target: "payload_builder", elapsed = ?build_start_time.elapsed(), "Payload building time limit reached, yielding partial block");
+            break;
+        }
+
         // ensure we still have capacity for this transaction
         if cumulative_gas_used + pool_tx.gas_limit() > block_gas_limit {
             // we can't fit this transaction into the block, so we need to mark it as invalid
@@ -303,6 +312,7 @@ where
             };
         }
 
+        let tx_start_time = std::time::Instant::now();
         let gas_used = match builder.execute_transaction(tx.clone()) {
             Ok(gas_used) => gas_used,
             Err(BlockExecutionError::Validation(BlockValidationError::InvalidTx {
@@ -327,6 +337,10 @@ where
             // this is an error that we should treat as fatal for this attempt
             Err(err) => return Err(PayloadBuilderError::evm(err)),
         };
+
+        if tx_start_time.elapsed() > std::time::Duration::from_millis(200) {
+            tracing::info!(target: "payload_builder", hash = ?pool_tx.hash(), elapsed = ?tx_start_time.elapsed(), "Extremely slow transaction executed! This blocks the thread!");
+        }
 
         // add to the total blob gas used if the transaction successfully executed
         if let Some(blob_tx) = tx.as_eip4844() {

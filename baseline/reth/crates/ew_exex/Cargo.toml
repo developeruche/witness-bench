@@ -1,0 +1,39 @@
+[package]
+name = "ew_exex"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+exclude.workspace = true
+
+[dependencies]
+alloy-eips.workspace = true
+alloy-primitives.workspace = true
+alloy-rpc-types-debug.workspace = true
+reth-db = { workspace = true, features = ["mdbx"] }
+reth-db-api.workspace = true
+thiserror = "2.0"
+postcard = { version = "1.1", default-features = false, features = ["alloc"] }
+serde.workspace = true
+async-trait = "0.1"
+jsonrpsee = { workspace = true, features = ["server", "macros"] }
+reth-evm = { workspace = true }
+alloy-consensus.workspace = true
+alloy-rlp.workspace = true
+futures-util.workspace = true
+reth-execution-types.workspace = true
+reth-exex.workspace = true
+reth-node-api.workspace = true
+reth-node-core.workspace = true
+reth-storage-api.workspace = true
+reth-revm = { workspace = true, features = ["witness"] }
+reth-tracing.workspace = true
+tokio.workspace = true
+clap.workspace = true
+eyre.workspace = true
+reth-tasks.workspace = true
+
+[lints]
+workspace = true

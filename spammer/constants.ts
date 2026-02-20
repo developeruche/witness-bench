@@ -2,7 +2,7 @@ import { defineChain } from "viem";
 
 export const RPC_URL = "http://127.0.0.1:8546";
 export const ROOT_PRIVATE_KEY =
-  "0xbcdf20249abf0ed6d944c0288fad489e33f66b3960d9e6229c1cd214ed3bbe31";
+  "0x39725efee3fb28614de3bacaffe4cc4bd8c436257e2c8bb887c4b5c4be45e76d";
 export const CHAIN_ID = 1234;
 
 // export const RPC_URL = process.env.RPC_URL || "http://127.0.0.1:8545";
