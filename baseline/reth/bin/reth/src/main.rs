@@ -42,6 +42,8 @@ fn main() {
 
 
 
+            let db_for_tcp = Arc::clone(&db_for_exex);
+
             let NodeHandle { node, node_exit_future } =
                 builder
                 .node(EthereumNode::default())
@@ -57,6 +59,13 @@ fn main() {
                 })
                 .launch_with_debug_capabilities()
                 .await?;
+
+            let tcp_server = Arc::new(ew_exex::tcp::WitnessServiceTcp::new(node.provider.clone(), db_for_tcp));
+            tokio::spawn(async move {
+                if let Err(e) = tcp_server.run_server("127.0.0.1:8005").await {
+                    tracing::error!("TCP server failed: {}", e);
+                }
+            });
 
             // Install ress subprotocol.
             if ress_args.enabled {

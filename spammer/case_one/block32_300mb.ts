@@ -1,6 +1,7 @@
 import { createPublicClient, http } from "viem";
 import { run_with_strategy, setup_100mb, setup_300mb, waitForNextBlock } from "../runners";
 import { localTestnet, RPC_URL } from "../constants";
+import { get_witness_by_block_number } from "../tcp";
 
 // For this case, we would like to find out how long it would that to process `engine_newPayload`
 // + `debug_executionWitness` for a block of depth 32, that is the latest block with a witness size
@@ -31,16 +32,11 @@ async function run() {
 
   console.log("Fetching execution witness...");
   const start = performance.now();
-  const witness = await publicClient.request({
-    method: "debug_executionWitness" as any,
-    // @ts-ignore
-    params: [`0x${orchestratorOutput.blockNumber.toString(16)}`],
-  });
+  const witness = await get_witness_by_block_number(Number(orchestratorOutput?.blockNumber));
   const end = performance.now();
   console.log(`Execution witness fetched in ${end - start} ms`);
 
-  const witnessSize = JSON.stringify(witness).length;
-  console.log(`Witness size: ${(witnessSize / 1024 / 1024).toFixed(2)} MB`);
+  console.log(`Witness size: ${(witness.length / 1024 / 1024).toFixed(2)} MB`);
 
   // The result of this bench can now be obtained from the logs of the CL client. (lighthouse in this case)
 }

@@ -57,6 +57,13 @@ pub trait Database: Sync + Send + 'static + std::fmt::Debug {
         number: BlockNumber,
     ) -> Result<Option<ExecutionWitness>, DatabaseError>;
 
+    /// Retrieves an execution witness directly as raw bytes from the database.
+    /// This bypasses decompression and serialization.
+    async fn get_raw_by_number(
+        &self,
+        number: BlockNumber,
+    ) -> Result<Option<Vec<u8>>, DatabaseError>;
+
     /// Deletes the witness for a single block.
     async fn delete(&self, number: BlockNumber) -> Result<(), DatabaseError>;
 

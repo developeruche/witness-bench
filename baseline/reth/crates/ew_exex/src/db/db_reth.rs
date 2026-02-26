@@ -15,6 +15,7 @@ use reth_db_api::{
     cursor::{DbCursorRO, DbCursorRW},
     database::Database as RethDatabase,
     transaction::{DbTx, DbTxMut},
+    tables::{RawTable, RawKey},
 };
 
 use super::{
@@ -96,6 +97,15 @@ impl Database for Db {
         let tx = self.env.tx()?;
         let result = tx.get::<ExecutionWitnesses>(number)?;
         Ok(result.map(|v| v.0))
+    }
+
+    async fn get_raw_by_number(
+        &self,
+        number: BlockNumber,
+    ) -> Result<Option<Vec<u8>>, DatabaseError> {
+        let tx = self.env.tx()?;
+        let result = tx.get::<RawTable<ExecutionWitnesses>>(RawKey::new(number))?;
+        Ok(result.map(|v| v.into_value()))
     }
 
     async fn delete(&self, number: BlockNumber) -> Result<(), DatabaseError> {
