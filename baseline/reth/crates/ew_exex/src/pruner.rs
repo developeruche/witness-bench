@@ -22,28 +22,31 @@ pub struct PrunerConfig {
     ///
     /// Refer [`PruningPolicy::EventDriven`].
     #[clap(skip)]
-    rx: Option<mpsc::Receiver<BlockNumber>>,
+    pub rx: Option<mpsc::Receiver<BlockNumber>>,
     /// Enable the pruner with default or custom values.
     #[arg(
+        id = "reth_witness_indexer.pruner.enabled",
         long = "reth-witness-indexer.pruner",
         default_value_t = false,
         help = "Enable the pruner to periodically remove old witnesses"
     )]
-    enabled: bool,
+    pub enabled: bool,
     /// The interval duration (in seconds) to periodically prune.
     ///
     /// Refer [`PruningPolicy::Periodic`].
     #[arg(
+        id = "reth_witness_indexer.pruner.interval",
         long = "reth-witness-indexer.pruner.interval",
         help = format!("Interval in seconds between periodic prune cycles [default: {}]", DEFAULT_PRUNING_INTERVAL)
     )]
-    interval: Option<u64>,
+    pub interval: Option<u64>,
     /// The number of recent blocks to preserve witnesses for in case of [`PruningPolicy::Periodic`].
     #[arg(
+        id = "reth_witness_indexer.pruner.n_recent",
         long = "reth-witness-indexer.pruner.n-recent",
         help = format!("Number of most recent blocks to keep witnesses for [default: {}]", DEFAULT_PRUNING_N_RECENT)
     )]
-    n_recent: Option<u64>,
+    pub n_recent: Option<u64>,
 }
 
 impl PrunerConfig {

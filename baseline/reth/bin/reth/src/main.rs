@@ -17,6 +17,15 @@ use reth_node_builder::NodeHandle;
 use reth_node_ethereum::EthereumNode;
 use tracing::info;
 
+#[derive(Debug, Clone, clap::Args)]
+pub struct ExtArgs {
+    #[command(flatten)]
+    pub ress: RessArgs,
+
+    #[command(flatten)]
+    pub indexer: WitnessIndexerConfig,
+}
+
 fn main() {
     reth_cli_util::sigsegv_handler::install();
 
@@ -25,10 +34,8 @@ fn main() {
         unsafe { std::env::set_var("RUST_BACKTRACE", "1") };
     }
 
-    let indexer_config = WitnessIndexerConfig::default();
-
     if let Err(err) =
-        Cli::<EthereumChainSpecParser, RessArgs>::parse().run(async move |builder, ress_args| {
+        Cli::<EthereumChainSpecParser, ExtArgs>::parse().run(async move |builder, ext_args| {
             info!(target: "reth::cli", "Launching node");
 
             let db_path = builder
@@ -37,13 +44,18 @@ fn main() {
                 .data_dir()
                 .join("witness-indexer");
             let db_args = reth_db::mdbx::DatabaseArguments::default();
-            let db_for_exex = Arc::new(WitnessIndexerDb::new_with_opts(db_path, db_args)?);
+            let db_for_exex = Arc::new(WitnessIndexerDb::new_with_opts(&db_path, db_args)?);
             let db_for_rpc = Arc::clone(&db_for_exex);
 
+            // Use configured directory or default fallback
+            let witness_dir = ext_args
+                .indexer
+                .witness_dir
+                .clone()
+                .unwrap_or_else(|| db_path.parent().unwrap().join("witness-files"));
 
-
-            let db_for_tcp = Arc::clone(&db_for_exex);
-
+            let indexer_config = ext_args.indexer;
+            
             let NodeHandle { node, node_exit_future } =
                 builder
                 .node(EthereumNode::default())
@@ -52,15 +64,23 @@ fn main() {
                     ctx.modules.merge_configured(rpc.into_rpc())?;
                     Ok(())
                 })
-                .install_exex("reth-witness-indexer", |ctx| async move {
-                    let indexer =
-                        WitnessIndexer::new(ctx, indexer_config.with_db(db_for_exex)).await?;
-                    Ok(indexer.run())
+                .install_exex("reth-witness-indexer", {
+                    let witness_dir_clone = witness_dir.clone();
+                    move |ctx| async move {
+                        let config = indexer_config
+                            .with_db(db_for_exex)
+                            .with_witness_dir(witness_dir_clone);
+                        let indexer = WitnessIndexer::new(ctx, config).await?;
+                        Ok(indexer.run())
+                    }
                 })
                 .launch_with_debug_capabilities()
                 .await?;
 
-            let tcp_server = Arc::new(ew_exex::tcp::WitnessServiceTcp::new(node.provider.clone(), db_for_tcp));
+            let tcp_server = Arc::new(ew_exex::tcp::WitnessServiceTcp::new(
+                node.provider.clone(),
+                witness_dir,
+            ));
             tokio::spawn(async move {
                 if let Err(e) = tcp_server.run_server("127.0.0.1:8005").await {
                     tracing::error!("TCP server failed: {}", e);
@@ -68,9 +88,9 @@ fn main() {
             });
 
             // Install ress subprotocol.
-            if ress_args.enabled {
+            if ext_args.ress.enabled {
                 install_ress_subprotocol(
-                    ress_args,
+                    ext_args.ress,
                     node.provider,
                     node.evm_config,
                     node.network,

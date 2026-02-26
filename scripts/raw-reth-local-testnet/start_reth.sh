@@ -25,6 +25,7 @@ RUST_LOG=info,reth_transaction_pool=debug $RETH_BIN node \
     --authrpc.addr 127.0.0.1 \
     --authrpc.port $RETH_AUTH_PORT \
     --discovery.port $RETH_P2P_PORT \
+    --reth-witness-indexer.witness-dir /Users/gregg/Documents/work/ethereum/witness-bench/scripts/raw-reth-local-testnet/witness-dir \
     --port $RETH_P2P_PORT \
     --log.file.directory "$LOG_DIR" \
     --color always

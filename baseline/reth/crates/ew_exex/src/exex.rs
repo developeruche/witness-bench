@@ -37,13 +37,14 @@ use crate::{
 };
 
 /// Configuration for the [`WitnessIndexer`].
-#[derive(Debug, Default, clap::Parser)]
+#[derive(Debug, Default, clap::Args)]
 pub struct WitnessIndexerConfig {
     /// An optional block number to start indexing from.
     ///
     /// If some, the latest block from database will be ignored and indexing will start from this
     /// configured start block.
     #[arg(
+        id = "reth_witness_indexer.start_block",
         long = "reth-witness-indexer.start-block",
         help = "Block number to start indexing from, ignoring the latest block in the database"
     )]
@@ -52,6 +53,7 @@ pub struct WitnessIndexerConfig {
     ///
     /// If not set, backfills the entire range from the latest indexed block to the new head.
     #[arg(
+        id = "reth_witness_indexer.max_backfill_distance",
         long = "reth-witness-indexer.max-backfill-distance",
         help = "Maximum distance in blocks to backfill witnesses when a new head is detected. If not set, backfills the entire range from the latest indexed block to the new head."
     )]
@@ -62,6 +64,7 @@ pub struct WitnessIndexerConfig {
     ///
     /// [ref]: https://docs.rs/alloy-rpc-types-debug/latest/alloy_rpc_types_debug/struct.ExecutionWitness.html#structfield.headers
     #[arg(
+        id = "reth_witness_indexer.include_headers",
         long = "reth-witness-indexer.include-headers",
         default_value_t = false,
         help = "Include ancestor headers in the execution witness"
@@ -72,6 +75,13 @@ pub struct WitnessIndexerConfig {
     /// If provided, this takes precedence over [`Self::db`] configuration.
     #[clap(skip)]
     db: Option<Arc<dyn Database>>,
+    /// Path to store execution witness files
+    #[arg(
+        id = "reth_witness_indexer.witness_dir",
+        long = "reth-witness-indexer.witness-dir",
+        help = "Directory where serialized witness files will be stored"
+    )]
+    pub witness_dir: Option<std::path::PathBuf>,
     /// Configuration for the indexer's pruner.
     #[command(flatten)]
     pruner: PrunerConfig,
@@ -113,6 +123,33 @@ impl WitnessIndexerConfig {
         self.db = Some(db);
         self
     }
+
+    /// Set the witness directory.
+    pub fn with_witness_dir(mut self, dir: std::path::PathBuf) -> Self {
+        self.witness_dir = Some(dir);
+        self
+    }
+}
+
+impl Clone for WitnessIndexerConfig {
+    fn clone(&self) -> Self {
+        Self {
+            start_block: self.start_block,
+            max_backfill_distance: self.max_backfill_distance,
+            include_headers: self.include_headers,
+            db: self.db.clone(),
+            witness_dir: self.witness_dir.clone(),
+            pruner: PrunerConfig {
+                // Cannot clone receiver, so we take None.
+                // In context of the CLI parsing this will always be None,
+                // and if set programmatically, the user handles the config.
+                rx: None,
+                enabled: self.pruner.enabled,
+                interval: self.pruner.interval,
+                n_recent: self.pruner.n_recent,
+            },
+        }
+    }
 }
 
 /// Execution Extension that indexes execution witnesses for each block.
@@ -128,6 +165,7 @@ pub struct WitnessIndexer<Node: FullNodeComponents> {
     db: Arc<dyn Database>,
     pruner: Option<Pruner>,
     include_headers: bool,
+    witness_dir: std::path::PathBuf,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -156,6 +194,13 @@ impl<Node: FullNodeComponents> WitnessIndexer<Node> {
         let db = config
             .db
             .ok_or_else(|| eyre::eyre!("reth-witness-indexer: config.db not setup"))?;
+
+        let witness_dir = config
+            .witness_dir
+            .unwrap_or_else(|| std::path::PathBuf::from("witness-files"));
+
+        // Ensure the directory exists
+        tokio::fs::create_dir_all(&witness_dir).await?;
 
         let pruner = config.pruner.build();
         if pruner.is_none() {
@@ -192,6 +237,7 @@ impl<Node: FullNodeComponents> WitnessIndexer<Node> {
             db,
             pruner,
             include_headers: config.include_headers,
+            witness_dir,
         })
     }
 }
@@ -296,7 +342,18 @@ impl<Node: FullNodeComponents> WitnessIndexer<Node> {
                 "extracting witness for block"
             );
             let witness = self.extract_witness(block).await?;
-            self.db.insert(block.num_hash(), witness).await?;
+
+            let payload = postcard::to_allocvec(&witness).expect("witness serialization should not fail");
+            let file_path = self.witness_dir.join(format!("{}.wn", block.number()));
+
+            tokio::fs::write(&file_path, payload).await?;
+
+            debug!(
+                target: "reth-witness-indexer::exex",
+                block_number = block.number(),
+                path = ?file_path,
+                "saved witness to file"
+            );
         }
         let tip = chain.tip().num_hash();
         self.db.update_latest_block(tip).await?;

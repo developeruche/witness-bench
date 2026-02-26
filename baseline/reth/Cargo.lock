@@ -3545,6 +3545,7 @@ dependencies = [
  "eyre",
  "futures-util",
  "jsonrpsee",
+ "nix 0.31.1",
  "postcard",
  "reth-db",
  "reth-db-api",
@@ -6048,6 +6049,7 @@ dependencies = [
  "cfg-if",
  "cfg_aliases",
  "libc",
+ "memoffset",
 ]
 
 [[package]]
