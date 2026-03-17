@@ -16,6 +16,7 @@ RUST_LOG=info,reth_transaction_pool=debug $RETH_BIN node \
     --builder.gaslimit 720000000000 \
     --builder.deadline 120 \
     --rpc.max-response-size 1000 \
+    --reth-witness-indexer.tcp-addr "127.0.0.1:8005" \
     --txpool.gas-limit 720000000000 \
     --txpool.max-account-slots 3000 \
     --txpool.pending-max-size 512 \
